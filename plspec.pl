@@ -18,7 +18,6 @@ describe(What) :-
     halt.
 describe(What) :-
     asserta(describing(What)).
-% TODO retract previous tests
 
 end(What) :-
     check(end, What, Error),
@@ -48,7 +47,7 @@ success_failure_total(Success, Failure, Total) :-
     ; Success = 0 ),
     ( predicate_property(failure(_, _), number_of_clauses(Failure))
     ; Failure = 0 ),
-    Total = Success + Failure,
+    Total is Success + Failure,
     !.
 
 term_expansion(it(Test) :- Body, spec(What, Test, Body)) :-
@@ -73,34 +72,6 @@ error_format(Error, Format, Args) :-
     format(string(Message), Format, Args),
     format(string(Error), "~nError: ~s:~d:~n\t~s", [File, Line, Message]).
 
-:- describe(describe/1).
-
-it('should be able to test itself') :-
-    A is 2,
-    A = 2.
-
-:- end(describe/1).
-
-:- begin_tests(plspec).
-
-test('check(describe) should error on nonground terms', [nondet]) :-
-    check(describe, Var, Error).
-
-test('check(end) should error on nonground terms', [nondet]) :-
-    check(end, Var, Error).
-
-test('check(end) should error on on wrong spec', [nondet]) :-
-    check(end, wrong_spec, Error).
-
-test('describe/1 and end/1 should assert/retract describing/1') :-
-    Spec = current_spec,
-    \+ describing(Spec),
-    describe(Spec),
-    describing(Spec),
-    end(Spec),
-    \+ describing(Spec).
-
-:- end_tests(plspec).
-
+:- load_files(['./plspec_test', './plspec_spec']).
 :- initialization run_tests.
 :- initialization run_specs.
