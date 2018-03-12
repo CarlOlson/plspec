@@ -1,12 +1,14 @@
 
-:- module(plspec, [describe/1, spec/2]).
+:- module(plspec, [describe/1, run_specs/0]).
 
-:- multifile spec/2.
+:- multifile spec/3.
 :- multifile describe/1.
 
-:- dynamic spec/2.
+:- dynamic spec/3.
 :- dynamic describe/1.
 :- dynamic describing/1.
+
+:- multifile system:term_expansion/2.
 
 :- style_check(-singleton).
 
@@ -16,6 +18,7 @@ describe(What) :-
     halt.
 describe(What) :-
     asserta(describing(What)).
+% TODO retract previous tests
 
 end(What) :-
     check(end, What, Error),
@@ -23,6 +26,34 @@ end(What) :-
     halt.
 end(What) :-
     retract(describing(What)).
+
+run_specs :-
+    forall(
+        spec(What, Test, Body),
+        ( call(Body),
+          assert(plspec:success(What, Test))
+        ; assert(plspec:failure(What, Test))
+        )
+    ),
+    success_failure_total(SuccessCount, _, Total),
+    format("~d of ~d Passed", [SuccessCount, Total]),
+    cleanup.
+
+cleanup :-
+    retractall(plspec:failure(_, _)),
+    retractall(plspec:success(_, _)).
+
+success_failure_total(Success, Failure, Total) :-
+    ( predicate_property(success(_, _), number_of_clauses(Success))
+    ; Success = 0 ),
+    ( predicate_property(failure(_, _), number_of_clauses(Failure))
+    ; Failure = 0 ),
+    Total = Success + Failure,
+    !.
+
+term_expansion(it(Test) :- Body, spec(What, Test, Body)) :-
+    describing(What),
+    !.
 
 check(describe, What, Error) :-
     \+ ground(What),
@@ -43,6 +74,11 @@ error_format(Error, Format, Args) :-
     format(string(Error), "~nError: ~s:~d:~n\t~s", [File, Line, Message]).
 
 :- describe(describe/1).
+
+it('should be able to test itself') :-
+    A is 2,
+    A = 2.
+
 :- end(describe/1).
 
 :- begin_tests(plspec).
@@ -67,3 +103,4 @@ test('describe/1 and end/1 should assert/retract describing/1') :-
 :- end_tests(plspec).
 
 :- initialization run_tests.
+:- initialization run_specs.
