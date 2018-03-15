@@ -29,23 +29,26 @@ end(What) :-
 run_specs :-
     forall(
         spec(What, Test, Body),
-        ( call(Body),
-          assert(plspec:success(What, Test))
-        ; assert(plspec:failure(What, Test))
-        )
+        run_spec(What, Test, Body)
     ),
     success_failure_total(SuccessCount, _, Total),
     format("~d of ~d Passed", [SuccessCount, Total]),
     cleanup.
 
+run_spec(What, Test, Body) :-
+    (  call(Body)
+    -> assert(plspec:success(What, Test))
+    ;  assert(plspec:failure(What, Test, _))
+    ).
+
 cleanup :-
-    retractall(plspec:failure(_, _)),
+    retractall(plspec:failure(_, _, _)),
     retractall(plspec:success(_, _)).
 
 success_failure_total(Success, Failure, Total) :-
     ( predicate_property(success(_, _), number_of_clauses(Success))
     ; Success = 0 ),
-    ( predicate_property(failure(_, _), number_of_clauses(Failure))
+    ( predicate_property(failure(_, _, _), number_of_clauses(Failure))
     ; Failure = 0 ),
     Total is Success + Failure,
     !.
