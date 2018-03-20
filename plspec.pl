@@ -37,10 +37,12 @@ run_specs :-
 
 run_spec(What, Test, Body) :-
     current_prolog_flag(debug, Debugging),
+    asserta(plspec:under_test(What, Test)),
     (  call((trace, Body, notrace))
     -> assert(plspec:success(What, Test))
     ;  assert(plspec:failure(What, Test, _))
     ),
+    retractall(plspec:under_test(_, _)),
     set_prolog_flag(debug, Debugging).
 
 cleanup :-

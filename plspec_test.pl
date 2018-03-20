@@ -73,4 +73,10 @@ test('run_spec/3 should retain debug status',
     run_spec(atopic, atest, false),
     current_prolog_flag(debug, true).
 
+test('run_spec/3 should set under_test/2 while testing',
+     [ cleanup(cleanup) ]) :-
+    run_spec(atopic, atest, (plspec:under_test(atopic, atest))),
+    plspec:success(atopic, atest),
+    \+ plspec:under_test(atopic, atest).
+
 :- end_tests(plspec_test).
