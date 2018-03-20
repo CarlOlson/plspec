@@ -59,4 +59,18 @@ test('run_spec/3 should assert failure predicates',
     run_spec(atopic, atest, false),
     plspec:failure(atopic, atest, _).
 
+test('run_spec/3 should not set debug status',
+     [ cleanup(cleanup) ]) :-
+    current_prolog_flag(debug, false),
+    run_spec(atopic, atest, true),
+    run_spec(atopic, atest, false),
+    current_prolog_flag(debug, false).
+
+test('run_spec/3 should retain debug status',
+     [ cleanup((cleanup, nodebug)) ]) :-
+    set_prolog_flag(debug, true),
+    run_spec(atopic, atest, true),
+    run_spec(atopic, atest, false),
+    current_prolog_flag(debug, true).
+
 :- end_tests(plspec_test).

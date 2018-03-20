@@ -36,10 +36,12 @@ run_specs :-
     cleanup.
 
 run_spec(What, Test, Body) :-
-    (  call(Body)
+    current_prolog_flag(debug, Debugging),
+    (  call((trace, Body, notrace))
     -> assert(plspec:success(What, Test))
     ;  assert(plspec:failure(What, Test, _))
-    ).
+    ),
+    set_prolog_flag(debug, Debugging).
 
 cleanup :-
     retractall(plspec:failure(_, _, _)),
