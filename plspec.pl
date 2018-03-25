@@ -12,6 +12,9 @@
 
 :- style_check(-singleton).
 
+$trace :- trace.
+$notrace :- notrace.
+
 describe(What) :-
     check(describe, What, Error),
     write(Error),
@@ -38,7 +41,7 @@ run_specs :-
 run_spec(What, Test, Body) :-
     current_prolog_flag(debug, Debugging),
     asserta(plspec:under_test(What, Test)),
-    (  call((trace, Body, notrace))
+    (  call(($trace, Body, $notrace))
     -> assert(plspec:success(What, Test))
     ;  assert(plspec:failure(What, Test, _))
     ),

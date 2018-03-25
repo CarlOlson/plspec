@@ -1,4 +1,19 @@
 
+mock(Pred, Body) :-
+    ground(Pred),
+    asserta((Pred :- !, asserta($mock_called(Pred)), call(Body)), Ref),
+    asserta($mocks(Ref)).
+
+mock_called(Pred) :-
+    ground(Pred),
+    $mock_called(Pred),
+    !.
+
+unmockall :-
+    forall($mocks(Ref), erase(Ref)),
+    retractall($mocks(_)),
+    retractall($mock_called(_)).
+
 :- begin_tests(plspec_test).
 
 test('check(describe) should error on nonground terms', [nondet]) :-
@@ -78,5 +93,17 @@ test('run_spec/3 should set under_test/2 while testing',
     run_spec(atopic, atest, (plspec:under_test(atopic, atest))),
     plspec:success(atopic, atest),
     \+ plspec:under_test(atopic, atest).
+
+test('run_spec/3 should trace current spec',
+     [ cleanup(cleanup) ]) :-
+    mock($trace, true),
+    mock($notrace, true),
+
+    run_spec(atopic, atest, true),
+
+    mock_called($trace),
+    mock_called($notrace),
+
+    plspec:success(atopic, atest).
 
 :- end_tests(plspec_test).
