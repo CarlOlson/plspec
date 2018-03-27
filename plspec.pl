@@ -9,6 +9,7 @@
 :- dynamic describing/1.
 
 :- multifile system:term_expansion/2.
+:- multifile user:prolog_trace_interception/4.
 
 :- style_check(-singleton).
 
@@ -43,7 +44,7 @@ run_spec(What, Test, Body) :-
     asserta(plspec:under_test(What, Test)),
     (  call(($trace, Body, $notrace))
     -> assert(plspec:success(What, Test))
-    ;  assert(plspec:failure(What, Test, _))
+    ;  true
     ),
     retractall(plspec:under_test(_, _)),
     set_prolog_flag(debug, Debugging).
@@ -51,6 +52,10 @@ run_spec(What, Test, Body) :-
 cleanup :-
     retractall(plspec:failure(_, _, _)),
     retractall(plspec:success(_, _)).
+
+term_expansion(it(Test) :- Body, spec(What, Test, Body)) :-
+    describing(What),
+    !.
 
 success_failure_total(Success, Failure, Total) :-
     ( predicate_property(success(_, _), number_of_clauses(Success))
@@ -60,9 +65,13 @@ success_failure_total(Success, Failure, Total) :-
     Total is Success + Failure,
     !.
 
-term_expansion(it(Test) :- Body, spec(What, Test, Body)) :-
-    describing(What),
-    !.
+error_format(Error, Format, Args) :-
+    (
+        source_location(File, Line);
+        [File, Line] = [unknown, 0]
+    ),
+    format(string(Message), Format, Args),
+    format(string(Error), "~nError: ~s:~d:~n\t~s", [File, Line, Message]).
 
 check(describe, What, Error) :-
     \+ ground(What),
@@ -74,13 +83,10 @@ check(end, What, Error) :-
     \+ describing(What),
     error_format(Error, "Not in spec ~p", [What]).
 
-error_format(Error, Format, Args) :-
-    (
-        source_location(File, Line);
-        [File, Line] = [unknown, 0]
-    ),
-    format(string(Message), Format, Args),
-    format(string(Error), "~nError: ~s:~d:~n\t~s", [File, Line, Message]).
+user:prolog_trace_interception(fail, Frame, _, fail) :-
+    plspec:under_test(What, Test),
+    assert(plspec:failure(What, Test, _)).
+user:prolog_trace_interception(_, _, _, continue).
 
 :- load_files(['./plspec_test', './plspec_spec']).
 :- initialization run_tests.

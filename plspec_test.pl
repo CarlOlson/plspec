@@ -69,10 +69,14 @@ test('run_spec/3 should not fail on test failure',
     run_spec(atopic, atest, false),
     \+ plspec:success(atopic, atest).
 
-test('run_spec/3 should assert failure predicates',
-     [ cleanup(cleanup) ]) :-
+test('run_spec/3 should assert failure predicate only once',
+     [ cleanup(cleanup), true(FailureClauses =:= 1) ]) :-
     run_spec(atopic, atest, false),
-    plspec:failure(atopic, atest, _).
+    plspec:failure(atopic, atest, _),
+
+    predicate_property( failure(_, _, _),
+                        number_of_clauses(FailureClauses)
+                      ).
 
 test('run_spec/3 should not set debug status',
      [ cleanup(cleanup) ]) :-
@@ -95,7 +99,7 @@ test('run_spec/3 should set under_test/2 while testing',
     \+ plspec:under_test(atopic, atest).
 
 test('run_spec/3 should trace current spec',
-     [ cleanup(cleanup) ]) :-
+     [ cleanup((cleanup, unmockall)) ]) :-
     mock($trace, true),
     mock($notrace, true),
 
