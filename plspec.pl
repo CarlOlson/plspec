@@ -85,9 +85,15 @@ check(end, What, Error) :-
 
 user:prolog_trace_interception(fail, Frame, _, fail) :-
     plspec:under_test(What, Test),
-    assert(plspec:failure(What, Test, _)).
+    prolog_frame_attribute(Frame, goal, Goal),
+    get_prolog_backtrace(-1, Backtrace, [frame(Frame)]),
+    assert(plspec:failure(What, Test,
+                          [ backtrace(Backtrace),
+                            goal(Goal)
+                          ])).
 user:prolog_trace_interception(_, _, _, continue).
 
 :- load_files(['./plspec_test', './plspec_spec']).
 :- initialization run_tests.
 :- initialization run_specs.
+:- initialization halt.

@@ -110,4 +110,19 @@ test('run_spec/3 should trace current spec',
 
     plspec:success(atopic, atest).
 
+test('failure information should include failed goal',
+     [ cleanup(cleanup), true(Goal == system:false) ]) :-
+    run_spec(atopic, atest, false),
+    plspec:failure(atopic, atest, Info),
+    member(goal(Goal), Info),
+    !.
+
+test('failure information should include backtrace (starting at goal)',
+     [ cleanup(cleanup), true(Pred == system:false/0) ]) :-
+    run_spec(atopic, atest, false),
+    plspec:failure(atopic, atest, Info),
+    member(backtrace(Backtrace), Info),
+    !,
+    Backtrace = [frame(_depth, call(Pred), _trace) | _].
+
 :- end_tests(plspec_test).
