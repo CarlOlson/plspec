@@ -1,14 +1,11 @@
 
-:- module(plspec, [describe/1, run_specs/0]).
+:- module(plspec, [describe/1, end/1, run_specs/0]).
+
+:- dynamic success/2.
+:- dynamic failure/3.
 
 :- multifile spec/3.
-:- multifile describe/1.
-
-:- dynamic spec/3.
-:- dynamic describe/1.
-:- dynamic describing/1.
-
-:- multifile system:term_expansion/2.
+:- multifile user:term_expansion/2.
 :- multifile user:prolog_trace_interception/4.
 
 :- style_check(-singleton).
@@ -53,7 +50,7 @@ cleanup :-
     retractall(plspec:failure(_, _, _)),
     retractall(plspec:success(_, _)).
 
-term_expansion(it(Test) :- Body, spec(What, Test, Body)) :-
+user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
     describing(What),
     !.
 
