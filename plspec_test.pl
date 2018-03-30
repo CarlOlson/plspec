@@ -1,11 +1,9 @@
 
 mock(Pred, Body) :-
-    ground(Pred),
     asserta((Pred :- !, asserta($mock_called(Pred)), call(Body)), Ref),
     asserta($mocks(Ref)).
 
 mock_called(Pred) :-
-    ground(Pred),
     $mock_called(Pred),
     !.
 
@@ -58,6 +56,13 @@ test('success_failure_total/3 should have a total',
     asserta(plspec:success(0, 0)),
     asserta(plspec:failure(0, 0, 0)),
     success_failure_total(_, _, Count).
+
+test('run_specs/0 should call cleanup',
+     [ cleanup((cleanup, unmockall)) ]) :-
+    mock(cleanup, true),
+    mock(format(_, _), true),
+    run_specs,
+    mock_called(cleanup).
 
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-

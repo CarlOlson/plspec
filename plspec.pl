@@ -41,7 +41,7 @@ run_spec(What, Test, Body) :-
     asserta(plspec:under_test(What, Test)),
     (  call(($trace, Body, $notrace))
     -> assert(plspec:success(What, Test))
-    ;  true
+    ;  $notrace
     ),
     retractall(plspec:under_test(_, _)),
     set_prolog_flag(debug, Debugging).
@@ -49,10 +49,6 @@ run_spec(What, Test, Body) :-
 cleanup :-
     retractall(plspec:failure(_, _, _)),
     retractall(plspec:success(_, _)).
-
-user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
-    describing(What),
-    !.
 
 success_failure_total(Success, Failure, Total) :-
     ( predicate_property(success(_, _), number_of_clauses(Success))
@@ -80,6 +76,10 @@ check(end, What, Error) :-
     \+ describing(What),
     error_format(Error, "Not in spec ~p", [What]).
 
+user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
+    describing(What),
+    !.
+
 user:prolog_trace_interception(fail, Frame, _, fail) :-
     plspec:under_test(What, Test),
     prolog_frame_attribute(Frame, goal, Goal),
@@ -88,7 +88,8 @@ user:prolog_trace_interception(fail, Frame, _, fail) :-
                           [ backtrace(Backtrace),
                             goal(Goal)
                           ])).
-user:prolog_trace_interception(_, _, _, continue).
+user:prolog_trace_interception(_, _, _, continue) :-
+    plspec:under_test(What, Test).
 
 :- load_files(['./plspec_test', './plspec_spec']).
 :- initialization run_tests.
