@@ -2,6 +2,7 @@
 :- include('./plspec').
 :- initialization run_tests.
 
+mock(Pred) :- mock(Pred, true).
 mock(Pred, Body) :-
     asserta((Pred :- !, asserta($mock_called(Pred)), call(Body)), Ref),
     asserta($mocks(Ref)).
@@ -14,6 +15,14 @@ unmockall :-
     forall($mocks(Ref), erase(Ref)),
     retractall($mocks(_)),
     retractall($mock_called(_)).
+
+success_failure_total(Success, Failure, Total) :-
+    ( predicate_property(success(_, _), number_of_clauses(Success))
+    ; Success = 0 ),
+    ( predicate_property(failure(_, _, _), number_of_clauses(Failure))
+    ; Failure = 0 ),
+    Total is Success + Failure,
+    !.
 
 :- begin_tests(plspec_test).
 
@@ -73,14 +82,28 @@ test('run_specs/0 should call cleanup',
 
 test('run_specs/0 should print failures',
      [ cleanup((cleanup, unmockall)) ]) :-
-    assert(plspec:failure(atopic, atest, _)),
-    mock(cleanup, true),
-    mock(format(_, _), true),
+    mock(cleanup),
+    mock(format(_, _)),
 
-    run_specs,
+    asserta(plspec:spec(atopic, atest, false)),
+    (run_specs; true),
+    retract(plspec:spec(atopic, atest, false)),
 
     mock_called(format(Message, _)),
     concat("FAILED", _, Message).
+
+test('run_specs/0 should print errors',
+     [ cleanup((cleanup, unmockall)) ]) :-
+    mock(cleanup),
+    mock(format(_, _)),
+    mock(print_message(_, _)),
+
+    asserta(plspec:spec(atopic, atest, does_not_exist)),
+    run_specs, % should be false
+    retract(plspec:spec(atopic, atest, does_not_exist)),
+
+    mock_called(print_message(error, _)),
+    !.
 
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-
@@ -136,6 +159,11 @@ test('run_spec/3 should trace current spec',
 test('run_spec/3 should only assert one failure',
      [ cleanup(cleanup), true(Fails =:= 1) ]) :-
     run_spec(atopic, atest, plunit_plspec_test:failure_with_stack),
+    success_failure_total(0, Fails, _).
+
+test('run_spec/3 should catch errors as failures',
+     [cleanup(cleanup), true(Fails =:= 1) ]) :-
+    run_spec(atopic, atest, does_not_exist),
     success_failure_total(0, Fails, _).
 
 test('failure information should include failed goal',

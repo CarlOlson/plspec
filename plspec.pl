@@ -40,24 +40,38 @@ run_specs :-
 run_spec(What, Test, Body) :-
     current_prolog_flag(debug, Debugging),
     asserta(plspec:under_test(What, Test)),
-    (  call(($trace, Body, $notrace))
-    -> assert(plspec:success(What, Test))
-    ;  $notrace
-    ),
+    spec_eval(Body),
     retractall(plspec:under_test(_, _)),
     set_prolog_flag(debug, Debugging).
+
+spec_eval(Body) :-
+    catch( call(($trace, Body, $notrace)),
+           Error,
+           (spec_catch_error(Error), false)
+         )
+    -> assert_success
+    ;  $notrace.
+
+spec_catch_error(Error) :-
+    $notrace,
+    assert_failure([error(Error)]).
 
 cleanup :-
     retractall(plspec:failure(_, _, _)),
     retractall(plspec:success(_, _)).
 
-success_failure_total(Success, Failure, Total) :-
-    ( predicate_property(success(_, _), number_of_clauses(Success))
-    ; Success = 0 ),
-    ( predicate_property(failure(_, _, _), number_of_clauses(Failure))
-    ; Failure = 0 ),
-    Total is Success + Failure,
-    !.
+assert_success :-
+    plspec:under_test(What, Test),
+    assert(plspec:success(What, Test)).
+
+assert_failure(NewOptions) :-
+    plspec:under_test(What, Test),
+    (  plspec:failure(What, Test, OldOptions)
+    -> retractall(plspec:failure(What, Test, _))
+    ;  OldOptions = []
+    ),
+    merge_options(NewOptions, OldOptions, Options),
+    assert(plspec:failure(What, Test, Options)).
 
 print_success :-
     forall(plspec:success(What, Test),
@@ -68,6 +82,11 @@ print_failure :-
     forall(plspec:failure(What, Test, Params),
            (
                format("FAILED: ~p ~p~n", [What, Test]),
+
+               (  option(error(Error), Params)
+               -> print_message(error, Error)
+               ),
+
                option(backtrace(Backtrace), Params, []),
                print_backtrace(Backtrace)
            )
@@ -102,12 +121,9 @@ user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
 
 user:prolog_trace_interception(fail, Frame, _, fail) :-
     plspec:under_test(What, Test),
+    \+ plspec:failure(_, _, _),
     prolog_frame_attribute(Frame, goal, Goal),
     get_prolog_backtrace(-1, Backtrace, [frame(Frame)]),
-    retractall(plspec:failure(What, Test, _)),
-    assert(plspec:failure(What, Test,
-                          [ backtrace(Backtrace),
-                            goal(Goal)
-                          ])).
+    assert_failure([ backtrace(Backtrace), goal(Goal) ]).
 user:prolog_trace_interception(_, _, _, continue) :-
     plspec:under_test(What, Test).
