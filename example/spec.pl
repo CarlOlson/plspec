@@ -14,7 +14,7 @@ it('should add one to the first argument') :-
 
 :- describe(sub1/2).
 
-it('should add one to the first argument') :-
+it('should subtract one from first argument') :-
     sub1(1, 0).
 
 :- end(sub1/2).
