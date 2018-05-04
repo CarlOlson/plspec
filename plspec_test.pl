@@ -1,4 +1,7 @@
 
+:- include('./plspec').
+:- initialization run_tests.
+
 mock(Pred, Body) :-
     asserta((Pred :- !, asserta($mock_called(Pred)), call(Body)), Ref),
     asserta($mocks(Ref)).

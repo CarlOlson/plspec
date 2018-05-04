@@ -1,8 +1,9 @@
 
 :- module(plspec, [describe/1, end/1, run_specs/0]).
 
-:- dynamic success/2.
+:- dynamic describing/1.
 :- dynamic failure/3.
+:- dynamic success/2.
 
 :- multifile spec/3.
 :- multifile user:term_expansion/2.
@@ -32,8 +33,12 @@ run_specs :-
         spec(What, Test, Body),
         run_spec(What, Test, Body)
     ),
-    success_failure_total(SuccessCount, _, Total),
-    format("~d of ~d Passed", [SuccessCount, Total]),
+    forall(plspec:success(What, Test),
+           format("PASSED: ~p ~p~n", [What, Test])
+          ),
+    forall(plspec:failure(What, Test, _),
+           format("FAILED: ~p ~p~n", [What, Test])
+          ),
     cleanup.
 
 run_spec(What, Test, Body) :-
@@ -90,8 +95,3 @@ user:prolog_trace_interception(fail, Frame, _, fail) :-
                           ])).
 user:prolog_trace_interception(_, _, _, continue) :-
     plspec:under_test(What, Test).
-
-:- load_files(['./plspec_test', './plspec_spec']).
-:- initialization run_tests.
-:- initialization run_specs.
-:- initialization halt.
