@@ -71,6 +71,17 @@ test('run_specs/0 should call cleanup',
     run_specs,
     mock_called(cleanup).
 
+test('run_specs/0 should print failures',
+     [ cleanup((cleanup, unmockall)) ]) :-
+    assert(plspec:failure(atopic, atest, _)),
+    mock(cleanup, true),
+    mock(format(_, _), true),
+
+    run_specs,
+
+    mock_called(format(Message, _)),
+    concat("FAILED", _, Message).
+
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-
     run_spec(atopic, atest, true),

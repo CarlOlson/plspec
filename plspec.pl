@@ -33,12 +33,8 @@ run_specs :-
         spec(What, Test, Body),
         run_spec(What, Test, Body)
     ),
-    forall(plspec:success(What, Test),
-           format("PASSED: ~p ~p~n", [What, Test])
-          ),
-    forall(plspec:failure(What, Test, _),
-           format("FAILED: ~p ~p~n", [What, Test])
-          ),
+    print_success,
+    print_failure,
     cleanup.
 
 run_spec(What, Test, Body) :-
@@ -62,6 +58,25 @@ success_failure_total(Success, Failure, Total) :-
     ; Failure = 0 ),
     Total is Success + Failure,
     !.
+
+print_success :-
+    forall(plspec:success(What, Test),
+           format("PASSED: ~p ~p~n", [What, Test])
+          ).
+
+print_failure :-
+    forall(plspec:failure(What, Test, Params),
+           (
+               format("FAILED: ~p ~p~n", [What, Test]),
+               option(backtrace(Backtrace), Params, []),
+               print_backtrace(Backtrace)
+           )
+          ).
+
+print_backtrace([]).
+print_backtrace([frame(Depth, Clause, Term) | Rest]) :-
+    format("      [~d] ~p~n", [Depth, Term]),
+    print_backtrace(Rest).
 
 error_format(Error, Format, Args) :-
     (
