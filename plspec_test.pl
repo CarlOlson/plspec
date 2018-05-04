@@ -17,6 +17,10 @@ unmockall :-
 
 :- begin_tests(plspec_test).
 
+failure_with_stack :-
+    !,
+    1 == 0.
+
 test('check(describe) should error on nonground terms', [nondet]) :-
     check(describe, Var, Error).
 
@@ -117,6 +121,11 @@ test('run_spec/3 should trace current spec',
     mock_called($notrace),
 
     plspec:success(atopic, atest).
+
+test('run_spec/3 should only assert one failure',
+     [ cleanup(cleanup), true(Fails =:= 1) ]) :-
+    run_spec(atopic, atest, plunit_plspec_test:failure_with_stack),
+    success_failure_total(0, Fails, _).
 
 test('failure information should include failed goal',
      [ cleanup(cleanup), true(Goal == system:false) ]) :-

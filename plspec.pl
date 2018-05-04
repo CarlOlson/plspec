@@ -89,6 +89,7 @@ user:prolog_trace_interception(fail, Frame, _, fail) :-
     plspec:under_test(What, Test),
     prolog_frame_attribute(Frame, goal, Goal),
     get_prolog_backtrace(-1, Backtrace, [frame(Frame)]),
+    retractall(plspec:failure(What, Test, _)),
     assert(plspec:failure(What, Test,
                           [ backtrace(Backtrace),
                             goal(Goal)
