@@ -18,17 +18,13 @@ unmockall :-
     retractall($mock_called(_)).
 
 success_failure_total(Success, Failure, Total) :-
-    ( predicate_property(success(_, _), number_of_clauses(Success))
-    ; Success = 0 ),
-    ( predicate_property(failure(_, _, _), number_of_clauses(Failure))
-    ; Failure = 0 ),
-    Total is Success + Failure,
-    !.
+    aggregate_all(count, success(_, _), Success),
+    aggregate_all(count, failure(_, _, _), Failure),
+    Total is Success + Failure.
 
 :- begin_tests(plspec_test).
 
 failure_with_stack :-
-    !,
     1 == 0.
 
 test('check(describe) should error on nonground terms', [nondet]) :-
@@ -103,8 +99,7 @@ test('run_specs/0 should print errors',
     run_specs,
     retract(plspec:spec(atopic, atest, does_not_exist)),
 
-    mock_called(print_message(error, _)),
-    !.
+    mock_called_once(print_message(error, _)).
 
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-
@@ -152,8 +147,8 @@ test('run_spec/3 should trace current spec',
 
     run_spec(atopic, atest, true),
 
-    mock_called($trace),
-    mock_called($notrace),
+    mock_called_once($trace),
+    mock_called_once($notrace),
 
     plspec:success(atopic, atest).
 
@@ -171,15 +166,13 @@ test('failure information should include failed goal',
      [ cleanup(cleanup), true(Goal == system:false) ]) :-
     run_spec(atopic, atest, false),
     plspec:failure(atopic, atest, Info),
-    member(goal(Goal), Info),
-    !.
+    option(goal(Goal), Info).
 
 test('failure information should include backtrace (starting at goal)',
      [ cleanup(cleanup), true(Pred == system:false/0) ]) :-
     run_spec(atopic, atest, false),
     plspec:failure(atopic, atest, Info),
-    member(backtrace(Backtrace), Info),
-    !,
+    option(backtrace(Backtrace), Info),
     Backtrace = [frame(_depth, call(Pred), _trace) | _].
 
 :- end_tests(plspec_test).
