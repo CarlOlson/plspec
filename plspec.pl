@@ -48,12 +48,12 @@ run_spec(What, Test, Body) :-
     set_prolog_flag(debug, Debugging).
 
 spec_eval(Body) :-
-    catch( call(($trace, Body, $notrace)),
+    catch( setup_call_cleanup($trace, (Body, !), $notrace),
            Error,
            (spec_catch_error(Error), false)
          )
     -> assert_success
-    ;  $notrace.
+    ;  true.
 
 spec_catch_error(Error) :-
     $notrace,
