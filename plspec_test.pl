@@ -7,8 +7,10 @@ mock(Pred, Body) :-
     asserta($mocks(Ref)).
 
 mock_called(Pred) :-
-    $mock_called(Pred),
-    !.
+    $mock_called(Pred).
+
+mock_called_once(Pred) :-
+    aggregate_all(count, $mock_called(Pred), 1).
 
 unmockall :-
     forall($mocks(Ref), erase(Ref)),
@@ -85,7 +87,7 @@ test('run_specs/0 should print failures',
     mock(format(_, _)),
 
     asserta(plspec:spec(atopic, atest, false)),
-    (run_specs; true),
+    run_specs,
     retract(plspec:spec(atopic, atest, false)),
 
     mock_called(format(Message, _)),
@@ -98,7 +100,7 @@ test('run_specs/0 should print errors',
     mock(print_message(_, _)),
 
     asserta(plspec:spec(atopic, atest, does_not_exist)),
-    run_specs, % should be false
+    run_specs,
     retract(plspec:spec(atopic, atest, does_not_exist)),
 
     mock_called(print_message(error, _)),

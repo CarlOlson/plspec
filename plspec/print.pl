@@ -11,10 +11,13 @@ print_failure :-
 
                (  option(error(Error), Params)
                -> print_message(error, Error)
+               ;  true
                ),
 
-               option(backtrace(Backtrace), Params, []),
-               print_backtrace(Backtrace)
+               (  option(backtrace(Backtrace), Params)
+               -> print_backtrace(Backtrace)
+               ;  true
+               )
            )
           ).
 
