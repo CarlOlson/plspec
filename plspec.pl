@@ -41,17 +41,27 @@ run_specs :-
     cleanup.
 
 run_spec(What, Test, Body) :-
-    current_prolog_flag(debug, Debugging),
-    asserta(plspec:under_test(What, Test)),
-    spec_eval(Body),
-    retractall(plspec:under_test(_, _)),
-    set_prolog_flag(debug, Debugging).
+    setup_call_cleanup(
+        (
+            current_prolog_flag(debug, Debugging),
+            asserta(plspec:under_test(What, Test))
+        ),
+        spec_eval(Body),
+        (
+            retractall(plspec:under_test(_, _)),
+            set_prolog_flag(debug, Debugging)
+        )
+    ).
 
 spec_eval(Body) :-
-    catch( setup_call_cleanup($trace, (Body, !), $notrace),
-           Error,
-           (spec_catch_error(Error), false)
-         )
+    catch(
+        setup_call_cleanup($trace, (Body, !), $notrace),
+        Error,
+        (
+            spec_catch_error(Error),
+            false
+        )
+    )
     -> assert_success
     ;  true.
 

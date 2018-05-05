@@ -1,8 +1,9 @@
 
 print_success :-
-    forall(plspec:success(What, Test),
-           format("PASSED: ~p ~p~n", [What, Test])
-          ).
+    forall(
+        plspec:success(What, Test),
+        format("PASSED: ~p ~p~n", [What, Test])
+    ).
 
 print_failure :-
     forall(plspec:failure(What, Test, Params),
@@ -28,8 +29,8 @@ print_backtrace([frame(Depth, Clause, Term) | Rest]) :-
 
 error_format(Error, Format, Args) :-
     (
-        source_location(File, Line);
-        [File, Line] = [unknown, 0]
+        source_location(File, Line)
+    ;   [File, Line] = [unknown, 0]
     ),
     format(string(Message), Format, Args),
     format(string(Error), "~nError: ~s:~d:~n\t~s", [File, Line, Message]).
