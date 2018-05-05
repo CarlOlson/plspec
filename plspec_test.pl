@@ -1,6 +1,5 @@
 
-:- include('./plspec').
-:- initialization run_tests.
+:- include(plspec).
 
 mock(Pred) :- mock(Pred, true).
 mock(Pred, Body) :-
