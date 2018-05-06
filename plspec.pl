@@ -50,7 +50,11 @@ run_spec(What, Test, Body) :-
             current_prolog_flag(debug, Debugging),
             asserta(plspec:under_test(What, Test))
         ),
-        spec_eval(Body),
+        (
+            extensions_call(before_each),
+            spec_eval(Body),
+            extensions_call(after_each)
+        ),
         (
             retractall(plspec:under_test(_, _)),
             set_prolog_flag(debug, Debugging)

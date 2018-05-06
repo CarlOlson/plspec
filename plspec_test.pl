@@ -13,8 +13,8 @@ mock_called(Pred) :-
     '$mock_called'(Pred).
 mock_called(Pred, Options) :-
     (
-        member(once, Options)
-    ->  aggregate_all(count, mock_called(Pred), 1)
+        options_cardinal(Options, N)
+    ->  aggregate_all(count, mock_called(Pred), N)
     ;   mock_called(Pred)
     ).
 
@@ -23,18 +23,31 @@ mocks_called([Last], Options) :-
 mocks_called([First, Second | Rest], Options) :-
     member(in_order, Options),
     %% TODO is bagof ordered in all prologs?
-    bagof(Pred, '$mock_called'(Pred), Preds),
+    bagof(Pred, mock_called(Pred), Preds),
     nextto(First, Second, Preds),
     mocks_called([Second | Rest], Options).
-mocks_called([First | Rest], Options) :-
+mocks_called(Mocks, Options) :-
     \+ member(in_order, Options),
-    mock_called(First),
-    mocks_called([Second | Rest], Options).
+    is_list(Mocks),
+    forall(
+        member(Mock, Mocks),
+        mock_called(Mock, Options)
+    ).
 
 unmockall :-
     forall('$mocks'(Ref), erase(Ref)),
     retractall('$mocks'(_)),
     retractall('$mock_called'(_)).
+
+options_cardinal(Options, 0) :-
+    member(none, Options).
+options_cardinal(Options, 1) :-
+    member(once, Options).
+options_cardinal(Options, 2) :-
+    member(twice, Options).
+options_cardinal(Options, N) :-
+    member(count(N), Options),
+    number(N).
 
 success_failure_total(Success, Failure, Total) :-
     aggregate_all(count, success(_, _), Success),
