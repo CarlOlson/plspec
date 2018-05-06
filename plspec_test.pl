@@ -1,21 +1,40 @@
 
 :- include(plspec).
 
+:- dynamic '$mocks'/1.
+:- dynamic '$mock_called'/1.
+
 mock(Pred) :- mock(Pred, true).
 mock(Pred, Body) :-
-    asserta((Pred :- !, asserta($mock_called(Pred)), call(Body)), Ref),
-    asserta($mocks(Ref)).
+    asserta((Pred :- !, assertz('$mock_called'(Pred)), call(Body)), Ref),
+    asserta('$mocks'(Ref)).
 
 mock_called(Pred) :-
-    $mock_called(Pred).
+    '$mock_called'(Pred).
+mock_called(Pred, Options) :-
+    (
+        member(once, Options)
+    ->  aggregate_all(count, mock_called(Pred), 1)
+    ;   mock_called(Pred)
+    ).
 
-mock_called_once(Pred) :-
-    aggregate_all(count, $mock_called(Pred), 1).
+mocks_called([Last], Options) :-
+    mock_called(Last, Options).
+mocks_called([First, Second | Rest], Options) :-
+    member(in_order, Options),
+    %% TODO is bagof ordered in all prologs?
+    bagof(Pred, '$mock_called'(Pred), Preds),
+    nextto(First, Second, Preds),
+    mocks_called([Second | Rest], Options).
+mocks_called([First | Rest], Options) :-
+    \+ member(in_order, Options),
+    mock_called(First),
+    mocks_called([Second | Rest], Options).
 
 unmockall :-
-    forall($mocks(Ref), erase(Ref)),
-    retractall($mocks(_)),
-    retractall($mock_called(_)).
+    forall('$mocks'(Ref), erase(Ref)),
+    retractall('$mocks'(_)),
+    retractall('$mock_called'(_)).
 
 success_failure_total(Success, Failure, Total) :-
     aggregate_all(count, success(_, _), Success),
@@ -78,7 +97,7 @@ test('run_specs/0 should call cleanup',
     mock_called(cleanup).
 
 test('run_specs/0 should print failures',
-     [ cleanup((cleanup, unmockall)) ]) :-
+     [ cleanup((cleanup, unmockall)), nondet ]) :-
     mock(cleanup),
     mock(format(_, _)),
 
@@ -99,7 +118,7 @@ test('run_specs/0 should print errors',
     run_specs,
     retract(plspec:spec(atopic, atest, does_not_exist)),
 
-    mock_called_once(print_message(error, _)).
+    mock_called(print_message(error, _), [once]).
 
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-
@@ -142,13 +161,13 @@ test('run_spec/3 should set under_test/2 while testing',
 
 test('run_spec/3 should trace current spec',
      [ cleanup((cleanup, unmockall)) ]) :-
-    mock($trace, true),
-    mock($notrace, true),
+    mock('$trace', true),
+    mock('$notrace', true),
 
     run_spec(atopic, atest, true),
 
-    mock_called_once($trace),
-    mock_called_once($notrace),
+    mock_called('$trace', [once]),
+    mock_called('$notrace', [once]),
 
     plspec:success(atopic, atest).
 
