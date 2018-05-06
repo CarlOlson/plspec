@@ -6,21 +6,22 @@ print_success :-
     ).
 
 print_failure :-
-    forall(plspec:failure(What, Test, Params),
-           (
-               format("FAILED: ~p ~p~n", [What, Test]),
+    forall(
+        plspec:failure(What, Test, Params),
+        (
+            format("FAILED: ~p ~p~n", [What, Test]),
 
-               (  option(error(Error), Params)
-               -> print_message(error, Error)
-               ;  true
-               ),
+            (  option(error(Error), Params)
+            -> print_message(error, Error)
+            ;  true
+            ),
 
-               (  option(backtrace(Backtrace), Params)
-               -> print_backtrace(Backtrace)
-               ;  true
-               )
-           )
-          ).
+            (  option(backtrace(Backtrace), Params)
+            -> print_backtrace(Backtrace)
+            ;  true
+            )
+        )
+    ).
 
 print_backtrace([]).
 print_backtrace([frame(Depth, Clause, Term) | Rest]) :-

@@ -5,17 +5,19 @@
 
 :- include(plspec/util).
 :- include(plspec/print).
+:- include(plspec/extension).
 
 :- dynamic describing/1.
 :- dynamic failure/3.
 :- dynamic success/2.
 
 :- multifile spec/3.
+:- multifile extension/2.
 :- multifile user:term_expansion/2.
 :- multifile user:prolog_trace_interception/4.
 
-$trace :- trace.
-$notrace :- notrace.
+'$trace' :- trace.
+'$notrace' :- notrace.
 
 describe(What) :-
     check(describe, What, Error),
@@ -32,10 +34,12 @@ end(What) :-
     retract(describing(What)).
 
 run_specs :-
+    extensions_call(before_all),
     forall(
         spec(What, Test, Body),
         run_spec(What, Test, Body)
     ),
+    extensions_call(after_all),
     print_success,
     print_failure,
     cleanup.
@@ -55,7 +59,7 @@ run_spec(What, Test, Body) :-
 
 spec_eval(Body) :-
     catch(
-        setup_call_cleanup($trace, (Body, !), $notrace),
+        setup_call_cleanup('$trace', (Body, !), '$notrace'),
         Error,
         (
             spec_catch_error(Error),
@@ -66,7 +70,7 @@ spec_eval(Body) :-
     ;  true.
 
 spec_catch_error(Error) :-
-    $notrace,
+    '$notrace',
     assert_failure([error(Error)]).
 
 cleanup :-
@@ -79,10 +83,11 @@ assert_success :-
 
 assert_failure(NewOptions) :-
     plspec:under_test(What, Test),
-    (  plspec:failure(What, Test, OldOptions)
-    -> retractall(plspec:failure(What, Test, _))
-    ;  OldOptions = []
+    (
+        plspec:failure(What, Test, OldOptions)
+    ;   OldOptions = []
     ),
+    retractall(plspec:failure(What, Test, _)),
     merge_options(NewOptions, OldOptions, Options),
     assert(plspec:failure(What, Test, Options)).
 

@@ -41,19 +41,14 @@ success_failure_total(Success, Failure, Total) :-
     aggregate_all(count, failure(_, _, _), Failure),
     Total is Success + Failure.
 
+:- include(plspec/print_test).
+
+:- include(plspec/extension_test).
+
 :- begin_tests(plspec_test).
 
 failure_with_stack :-
     1 == 0.
-
-test('check(describe) should error on nonground terms', [nondet]) :-
-    check(describe, Var, Error).
-
-test('check(end) should error on nonground terms', [nondet]) :-
-    check(end, Var, Error).
-
-test('check(end) should error on on wrong spec', [nondet]) :-
-    check(end, wrong_spec, Error).
 
 test('describe/1 and end/1 should assert/retract describing/1') :-
     Spec = current_spec,
