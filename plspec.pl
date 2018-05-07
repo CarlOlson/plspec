@@ -91,7 +91,7 @@ user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
 
 user:prolog_trace_interception(fail, Frame, _, fail) :-
     under_test(What, Test),
-    \+ plspec:failure(_, _, _),
+    \+ plspec:failure(What, Test, _),
     prolog_frame_attribute(Frame, goal, Goal),
     get_prolog_backtrace(-1, Backtrace, [frame(Frame)]),
     assert_failure([ backtrace(Backtrace), goal(Goal) ]).

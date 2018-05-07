@@ -180,4 +180,22 @@ test('should not count backtracking as failure',
              )),
     success_failure_total(_, Fails, _).
 
+test('should only remove matching failures (from backtracking) on success',
+     [ cleanup(cleanup) ]) :-
+    run_spec(topic1, test1, false),
+    run_spec(topic2, test2, false),
+    run_spec(topic1, test2, (
+                 between(1, 2, X),
+                 X = 2
+             )),
+    plspec:failure(topic1, test1, _),
+    plspec:failure(topic2, test2, _).
+
+test('should record multiple failures',
+     [ cleanup(cleanup), true(Fails =:= 3) ]) :-
+    run_spec(topic1, test1, false),
+    run_spec(topic1, test2, false),
+    run_spec(topic2, test1, false),
+    success_failure_total(_, Fails, _).
+
 :- end_tests(plspec_test).
