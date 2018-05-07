@@ -4,7 +4,6 @@
 :- style_check(-singleton).
 
 :- include(plspec/util).
-:- include(plspec/print).
 :- include(plspec/extension).
 
 :- dynamic describing/1.
@@ -16,6 +15,8 @@
 :- multifile extension/2.
 :- multifile user:term_expansion/2.
 :- multifile user:prolog_trace_interception/4.
+
+:- use_module(plspec/print).
 
 '$trace' :- trace.
 '$notrace' :- notrace.

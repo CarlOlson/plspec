@@ -1,5 +1,8 @@
 
-extension(print, [after_all((print_summary, print_failure))]).
+:- module(print, []).
+:- include(util).
+
+plspec:extension(print, [after_all((print:print_summary, print:print_failure))]).
 
 print_summary :-
     success_failure_total(Success, _, Total),
@@ -34,6 +37,6 @@ print_failure :-
 
 print_backtrace([]).
 print_backtrace([frame(_, _, '<meta-call>'(plspec:_)) | _]).
-print_backtrace([frame(Depth, Clause, Term) | Rest]) :-
+print_backtrace([frame(Depth, _Clause, Term) | Rest]) :-
     format("\t [~d] ~p~n", [Depth, Term]),
     print_backtrace(Rest).
