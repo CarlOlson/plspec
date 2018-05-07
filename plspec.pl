@@ -10,6 +10,7 @@
 :- dynamic describing/1.
 :- dynamic failure/3.
 :- dynamic success/2.
+:- dynamic extension/2.
 
 :- multifile spec/3.
 :- multifile extension/2.
@@ -20,16 +21,8 @@
 '$notrace' :- notrace.
 
 describe(What) :-
-    check(describe, What, Error),
-    write(Error),
-    halt.
-describe(What) :-
     asserta(describing(What)).
 
-end(What) :-
-    check(end, What, Error),
-    write(Error),
-    halt.
 end(What) :-
     retract(describing(What)).
 
@@ -40,8 +33,6 @@ run_specs :-
         run_spec(What, Test, Body)
     ),
     extensions_call(after_all),
-    print_success,
-    print_failure,
     cleanup.
 
 run_spec(What, Test, Body) :-

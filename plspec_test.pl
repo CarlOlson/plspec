@@ -49,11 +49,6 @@ options_cardinal(Options, N) :-
     member(count(N), Options),
     number(N).
 
-success_failure_total(Success, Failure, Total) :-
-    aggregate_all(count, success(_, _), Success),
-    aggregate_all(count, failure(_, _, _), Failure),
-    Total is Success + Failure.
-
 :- include(plspec/print_test).
 
 :- include(plspec/extension_test).
@@ -103,30 +98,6 @@ test('run_specs/0 should call cleanup',
     mock(format(_, _), true),
     run_specs,
     mock_called(cleanup).
-
-test('run_specs/0 should print failures',
-     [ cleanup((cleanup, unmockall)), nondet ]) :-
-    mock(cleanup),
-    mock(format(_, _)),
-
-    asserta(plspec:spec(atopic, atest, false)),
-    run_specs,
-    retract(plspec:spec(atopic, atest, false)),
-
-    mock_called(format(Message, _)),
-    concat("FAILED", _, Message).
-
-test('run_specs/0 should print errors',
-     [ cleanup((cleanup, unmockall)) ]) :-
-    mock(cleanup),
-    mock(format(_, _)),
-    mock(print_message(_, _)),
-
-    asserta(plspec:spec(atopic, atest, does_not_exist)),
-    run_specs,
-    retract(plspec:spec(atopic, atest, does_not_exist)),
-
-    mock_called(print_message(error, _), [once]).
 
 test('run_spec/3 should assert success predicates',
      [ cleanup(cleanup) ]) :-
