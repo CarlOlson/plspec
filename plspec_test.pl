@@ -49,8 +49,7 @@ options_cardinal(Options, N) :-
     member(count(N), Options),
     number(N).
 
-:- include(plspec/print_test).
-
+:- retractall(plspec:extension(_, _)).
 :- include(plspec/extension_test).
 
 :- begin_tests(plspec_test).
