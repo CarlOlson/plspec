@@ -1,9 +1,6 @@
 
-library_directory('..').
-
-:- use_module(library(plspec)).
-
-:- ['./main.pl'].
+:- use_module(main).
+:- use_module('../plspec').
 
 :- describe(add1/2).
 
