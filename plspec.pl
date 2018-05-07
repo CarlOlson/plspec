@@ -1,8 +1,6 @@
 
 :- module(plspec, [describe/1, end/1, run_specs/0]).
 
-:- style_check(-singleton).
-
 :- include(plspec/util).
 :- include(plspec/extension).
 
@@ -75,6 +73,7 @@ cleanup :-
 
 assert_success :-
     plspec:under_test(What, Test),
+    retractall(plspec:failure(What, Test, _)),
     assert(plspec:success(What, Test)).
 
 assert_failure(NewOptions) :-
@@ -88,14 +87,13 @@ assert_failure(NewOptions) :-
     assert(plspec:failure(What, Test, Options)).
 
 user:term_expansion(it(Test) :- Body, plspec:spec(What, Test, Body)) :-
-    describing(What),
-    !.
+    describing(What).
 
 user:prolog_trace_interception(fail, Frame, _, fail) :-
-    plspec:under_test(What, Test),
+    under_test(What, Test),
     \+ plspec:failure(_, _, _),
     prolog_frame_attribute(Frame, goal, Goal),
     get_prolog_backtrace(-1, Backtrace, [frame(Frame)]),
     assert_failure([ backtrace(Backtrace), goal(Goal) ]).
 user:prolog_trace_interception(_, _, _, continue) :-
-    plspec:under_test(What, Test).
+    under_test(_, _).

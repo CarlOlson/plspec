@@ -170,6 +170,14 @@ test('failure information should include backtrace (starting at goal)',
     run_spec(atopic, atest, false),
     plspec:failure(atopic, atest, Info),
     option(backtrace(Backtrace), Info),
-    Backtrace = [frame(_depth, call(Pred), _trace) | _].
+    Backtrace = [frame(_Depth, call(Pred), _Trace) | _].
+
+test('should not count backtracking as failure',
+     [ cleanup(cleanup), true(Fails =:= 0) ]) :-
+    run_spec(atopic, atest, (
+                 between(1, 2, X),
+                 X = 2
+             )),
+    success_failure_total(_, Fails, _).
 
 :- end_tests(plspec_test).
