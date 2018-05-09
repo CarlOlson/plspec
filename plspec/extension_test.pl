@@ -94,11 +94,19 @@ test("should call in order before_each > specs > after_each",
         [once, in_order]
     ).
 
-test("should not loop on errors",
+test("should not loop on errors in extension hooks",
      [ cleanup(extension_cleanup) ]) :-
-    asserta(plspec:extension(simple, [
-                                 before_each(does_not_exist)
-                             ])),
-    extensions_call(before_each).
+    mock(print_message(_, _)),
+    mock(format(_, _)),
+    asserta(plspec:extension(simple, [before_each(does_not_exist)])),
+    call_extensions(before_each).
+
+test("should report errors in extension hooks",
+     [ cleanup(extension_cleanup) ]) :-
+    mock(print_message(_, _)),
+    mock(format(_, _)),
+    asserta(plspec:extension(simple, [before_each(does_not_exist)])),
+    call_extensions(before_each),
+    mock_called(print_message(_, _)).
 
 :- end_tests(plspec_extension_test).

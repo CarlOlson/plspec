@@ -26,12 +26,12 @@ end(What) :-
     retract(describing(What)).
 
 run_specs :-
-    extensions_call(before_all),
+    call_extensions(before_all),
     forall(
         spec(What, Test, Body),
         run_spec(What, Test, Body)
     ),
-    extensions_call(after_all),
+    call_extensions(after_all),
     cleanup.
 
 run_spec(What, Test, Body) :-
@@ -41,9 +41,9 @@ run_spec(What, Test, Body) :-
             asserta(plspec:under_test(What, Test))
         ),
         (
-            extensions_call(before_each),
+            call_extensions(before_each),
             spec_eval(Body),
-            extensions_call(after_each)
+            call_extensions(after_each)
         ),
         (
             retractall(plspec:under_test(_, _)),
