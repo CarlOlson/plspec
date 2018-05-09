@@ -56,16 +56,12 @@ spec_eval(Body) :-
         setup_call_cleanup('$trace', (Body, !), '$notrace'),
         Error,
         (
-            spec_catch_error(Error),
+            assert_failure([error(Error)]),
             false
         )
     )
     -> assert_success
     ;  true.
-
-spec_catch_error(Error) :-
-    '$notrace',
-    assert_failure([error(Error)]).
 
 cleanup :-
     retractall(plspec:failure(_, _, _)),
