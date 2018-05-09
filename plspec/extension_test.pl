@@ -94,4 +94,11 @@ test("should call in order before_each > specs > after_each",
         [once, in_order]
     ).
 
+test("should not loop on errors",
+     [ cleanup(extension_cleanup) ]) :-
+    asserta(plspec:extension(simple, [
+                                 before_each(does_not_exist)
+                             ])),
+    extensions_call(before_each).
+
 :- end_tests(plspec_extension_test).

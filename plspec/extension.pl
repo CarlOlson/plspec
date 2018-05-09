@@ -6,5 +6,5 @@ extensions_call(Pred) :-
             plspec:extension(_, Options),
             option(Option, Options)
         ),
-        call(Body)
+        catch(Body, _Error, true)
     ).
